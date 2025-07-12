@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  phone     String?
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  customers   Customer[]
+  orders      Order[]
+  fieldVisits FieldVisit[]
+
+  @@map("stores")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  storeId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  store  Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("customers")
+}
+
+model SalesRepresentative {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  phone      String?
+  employeeId String   @unique
+  territory  String[] @default([])
+  target     Float    @default(0)
+  achieved   Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  fieldVisits FieldVisit[]
+
+  @@map("sales_representatives")
+}
+
+model FieldVisit {
+  id           String    @id @default(cuid())
+  salesRepId   String
+  storeId      String
+  visitDate    DateTime  @default(now())
+  checkInTime  DateTime  @default(now())
+  checkOutTime DateTime?
+  latitude     Float
+  longitude    Float
+  photos       String[]  @default([])
+  notes        String?
+  visitPurpose String
+  result       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  salesRep SalesRepresentative @relation(fields: [salesRepId], references: [id], onDelete: Cascade)
+  store    Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("field_visits")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  customerId  String
+  storeId     String
+  totalAmount Float
+  status      OrderStatus @default(NEW)
+  orderDate   DateTime    @default(now())
+  completedAt DateTime?
+  canceledAt  DateTime?
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items    OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String @id @default(cuid())
+  orderId     String
+  productName String
+  quantity    Int
+  price       Float
+  total       Float
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  NEW
+  IN_PROCESS
+  COMPLETED
+  CANCELED
+}
