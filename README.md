@@ -1,36 +1,193 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Order Management & Field Sales System
 
-## Getting Started
+Sistem manajemen order dan aktivitas sales lapangan yang komprehensif, dibangun dengan Next.js 15, TypeScript, dan Tailwind CSS.
 
-First, run the development server:
+## 🚀 Fitur Utama
+
+### Manajemen Order
+
+- **List Detail Order Pelanggan**: Daftar lengkap orderan dengan informasi customer dan toko
+- **Status Pesanan**: Tracking status (baru, dalam proses, selesai, batal)
+- **Pelacakan Riwayat**: Riwayat pesanan per toko dengan filter dan pencarian
+- **Laporan Order**: Total order per toko dan secara keseluruhan
+
+### Aktivitas Sales Lapangan
+
+- **Bukti Kunjungan**: Upload foto dan lokasi GPS (geotagging) untuk setiap kunjungan
+- **Riwayat Kunjungan**: Tracking kunjungan setiap sales ke toko
+- **Check-in System**: Sistem check-in real-time dengan GPS tracking
+
+### Dashboard & Analytics
+
+- **Dashboard Visual**: Pencapaian target dengan grafik dan visualisasi
+- **Profile User**: Dashboard personal dengan target achievements
+- **Laporan Performa**: Analytics mendalam untuk setiap toko dan sales
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Charts**: Recharts
+- **Icons**: Lucide React
+- **UI Components**: Headless UI
+- **Progress Indicators**: React Circular Progressbar
+
+## 📱 Responsive Design
+
+Aplikasi ini fully responsive dan optimized untuk:
+
+- Desktop (1024px+)
+- Tablet (768px - 1023px)
+- Mobile (< 768px)
+
+## 🗂️ Struktur Project
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx           # Dashboard utama
+│   ├── orders/            # Manajemen order
+│   ├── field-activity/    # Aktivitas sales lapangan
+│   ├── reports/           # Laporan dan analytics
+│   └── profile/           # Profile & target achievements
+├── components/            # Reusable components
+│   └── Navigation.tsx     # Komponen navigasi
+├── lib/                   # Utilities dan data
+│   ├── mockData.ts       # Sample data untuk demo
+│   └── utils.ts          # Helper functions
+└── types/                 # TypeScript type definitions
+    └── index.ts          # Interface dan types
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm atau yarn
+
+### Installation
+
+1. Clone repository ini
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Jalankan development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Buka [http://localhost:3000](http://localhost:3000) di browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📊 Fitur Dashboard
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Dashboard Utama
 
-## Learn More
+- Statistik total orders dan revenue
+- Chart status orders (pie chart)
+- Trend orders bulanan (bar chart)
+- Top performing stores
 
-To learn more about Next.js, take a look at the following resources:
+### Manajemen Order
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Filter dan search orders
+- Status tracking dengan color coding
+- Detail items per order
+- Sort berdasarkan tanggal, amount, atau status
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Field Activity
 
-## Deploy on Vercel
+- Riwayat kunjungan lengkap dengan foto
+- Check-in system dengan GPS
+- Upload multiple photos
+- Catatan kunjungan
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Reports
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Filter berdasarkan periode dan toko
+- Chart trend bulanan
+- Distribusi status orders
+- Performa per toko dengan ranking
+
+### Profile & Achievements
+
+- Circular progress bar untuk target
+- Chart target vs pencapaian bulanan
+- Badge dan achievements
+- Aktivitas terbaru
+
+## 🔧 Customization
+
+### Menambah Data
+
+Untuk menambah data sample, edit file `src/lib/mockData.ts`
+
+### Menambah Fitur
+
+1. Tambah types di `src/types/index.ts`
+2. Tambah page di `src/app/`
+3. Update navigation di `src/components/Navigation.tsx`
+
+### Styling
+
+Aplikasi menggunakan Tailwind CSS. Kustomisasi warna dan styling di `tailwind.config.ts`
+
+## 📱 Mobile Features
+
+- Bottom navigation untuk mobile
+- Touch-friendly interfaces
+- Responsive tables dan charts
+- Mobile-optimized forms
+
+## 🗺️ GPS & Location Features
+
+- Browser geolocation API
+- Coordinate validation untuk Indonesia
+- Distance calculation between coordinates
+- Location-based check-ins
+
+## 📸 Photo Upload Features
+
+- Multiple file upload
+- Image preview
+- Base64 encoding untuk storage
+- Mobile camera integration
+
+## 🎯 Business Logic
+
+### Order Status Flow
+
+1. **New** (Baru) - Order baru dibuat
+2. **In Process** (Dalam Proses) - Order sedang diproses
+3. **Completed** (Selesai) - Order telah selesai
+4. **Canceled** (Dibatal) - Order dibatalkan
+
+### Sales Target Tracking
+
+- Annual targets per sales representative
+- Monthly achievement tracking
+- Performance percentage calculations
+- Achievement badges dan rewards
+
+## 🔮 Future Enhancements
+
+- [ ] Real-time notifications
+- [ ] Integration dengan payment gateway
+- [ ] Export laporan ke PDF/Excel
+- [ ] Advanced analytics dengan machine learning
+- [ ] Multi-tenant support
+- [ ] Offline mode untuk mobile
+- [ ] Push notifications untuk updates
+
+## 👥 Kontribusi
+
+Silakan berkontribusi dengan membuat pull request atau melaporkan issues.
+
+## 📄 License
+
+MIT License - lihat file LICENSE untuk detail lengkap.
