@@ -3,12 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { MapPin, Menu, X } from "lucide-react";
+import {
+  MapPin,
+  Menu,
+  X,
+  ShoppingCart,
+  BarChart,
+  History,
+  Shield,
+} from "lucide-react";
 import { useState } from "react";
 
 const navigation = [
+  { name: "Dashboard", href: "/", icon: BarChart },
   { name: "Sales Field", href: "/sales-field", icon: MapPin },
   { name: "Field Visits", href: "/field-visits", icon: MapPin },
+  { name: "Orders", href: "/orders", icon: ShoppingCart },
+  { name: "Order History", href: "/order-history", icon: History },
+  { name: "Admin Orders", href: "/admin/orders", icon: Shield },
 ];
 
 export function Navigation() {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MapPin, Camera, User } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
+import { getFieldVisits } from "@/lib/actions/field-visits";
 
 interface FieldVisit {
   id: string;
@@ -15,7 +16,7 @@ interface FieldVisit {
     address: string;
   };
   visitPurpose: string;
-  checkInTime: string;
+  checkInTime: Date;
   latitude: number;
   longitude: number;
   photos: string[];
@@ -32,8 +33,7 @@ export default function FieldVisitsPage() {
 
   const loadVisits = async () => {
     try {
-      const response = await fetch("/api/field-visits");
-      const result = await response.json();
+      const result = await getFieldVisits();
       if (result.success) {
         setVisits(result.data);
       }
@@ -103,7 +103,7 @@ export default function FieldVisitsPage() {
                         </div>
                         <div className="mt-1">
                           <p className="text-sm text-gray-500">
-                            {formatDateTime(new Date(visit.checkInTime))}
+                            {formatDateTime(visit.checkInTime)}
                           </p>
                           <p className="text-xs text-gray-400">
                             {visit.store.address}

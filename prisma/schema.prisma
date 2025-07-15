@@ -70,6 +70,7 @@ model SalesRepresentative {
 
   // Relations
   fieldVisits FieldVisit[]
+  orders      Order[]
 
   @@map("sales_representatives")
 }
@@ -98,21 +99,27 @@ model FieldVisit {
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  customerId  String
-  storeId     String
-  totalAmount Float
-  status      OrderStatus @default(NEW)
-  orderDate   DateTime    @default(now())
-  completedAt DateTime?
-  canceledAt  DateTime?
-  notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                   String      @id @default(cuid())
+  customerId           String
+  storeId              String
+  salesRepId           String? // Added for tracking which sales rep created the order
+  totalAmount          Float
+  status               OrderStatus @default(NEW)
+  orderDate            DateTime    @default(now())
+  completedAt          DateTime?
+  canceledAt           DateTime?
+  confirmedAt          DateTime? // Added for admin confirmation
+  confirmedBy          String? // Added for tracking who confirmed
+  notes                String?
+  adminNotes           String? // Added for admin notes
+  requiresConfirmation Boolean     @default(false) // Added to flag orders needing confirmation
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
   // Relations
-  customer Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  store    Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  salesRep SalesRepresentative? @relation(fields: [salesRepId], references: [id], onDelete: SetNull)
   items    OrderItem[]
 
   @@map("orders")
@@ -134,6 +141,7 @@ model OrderItem {
 
 enum OrderStatus {
   NEW
+  PENDING_CONFIRMATION
   IN_PROCESS
   COMPLETED
   CANCELED

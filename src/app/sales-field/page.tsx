@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import {
   Camera,
   CheckCircle,
@@ -10,6 +10,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { getCurrentPosition } from "@/lib/utils";
+import { createFieldVisit } from "@/lib/actions/field-visits";
+import { getStores, getSalesReps } from "@/lib/actions/stores";
 
 interface Store {
   id: string;
@@ -34,12 +36,16 @@ interface SalesRep {
 export default function SalesFieldPage() {
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [, startTransition] = useTransition();
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedStore, setSelectedStore] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [storeAddress, setStoreAddress] = useState("");
+  const [useExistingStore, setUseExistingStore] = useState(true);
   const [visitPurpose, setVisitPurpose] = useState("");
   const [notes, setNotes] = useState("");
   const [stores, setStores] = useState<Store[]>([]);
@@ -54,8 +60,7 @@ export default function SalesFieldPage() {
 
   const loadStores = async () => {
     try {
-      const response = await fetch("/api/stores");
-      const result = await response.json();
+      const result = await getStores();
       if (result.success) {
         setStores(result.data);
       }
@@ -66,8 +71,7 @@ export default function SalesFieldPage() {
 
   const loadSalesReps = async () => {
     try {
-      const response = await fetch("/api/sales-reps");
-      const result = await response.json();
+      const result = await getSalesReps();
       if (result.success && result.data.length > 0) {
         setCurrentSalesRep(result.data[0]); // Use first sales rep as current user
       }
@@ -119,8 +123,13 @@ export default function SalesFieldPage() {
       return;
     }
 
-    if (!selectedStore) {
+    if (!selectedStore && useExistingStore) {
       alert("Pilih toko yang dikunjungi terlebih dahulu.");
+      return;
+    }
+
+    if (!storeName && !useExistingStore) {
+      alert("Masukkan nama toko yang dikunjungi.");
       return;
     }
 
@@ -137,44 +146,46 @@ export default function SalesFieldPage() {
     try {
       setIsSaving(true);
 
-      // Save to database via API
-      const response = await fetch("/api/field-visits", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          salesRepId: currentSalesRep.id,
-          storeId: selectedStore,
-          visitPurpose,
-          notes,
-          latitude: currentLocation.lat,
-          longitude: currentLocation.lng,
-          photos,
-        }),
+      startTransition(async () => {
+        try {
+          const result = await createFieldVisit({
+            salesRepId: currentSalesRep.id,
+            storeId: useExistingStore ? selectedStore : undefined,
+            storeName: useExistingStore ? undefined : storeName,
+            storeAddress: useExistingStore ? undefined : storeAddress,
+            visitPurpose,
+            notes,
+            latitude: currentLocation.lat,
+            longitude: currentLocation.lng,
+            photos,
+          });
+
+          if (result.success) {
+            alert(
+              result.message ||
+                "Check-in berhasil! Data kunjungan telah disimpan ke database."
+            );
+
+            // Reset form
+            setCurrentLocation(null);
+            setPhotos([]);
+            setSelectedStore("");
+            setStoreName("");
+            setStoreAddress("");
+            setVisitPurpose("");
+            setNotes("");
+          } else {
+            alert("Gagal menyimpan data: " + (result.error || "Unknown error"));
+          }
+        } catch (error) {
+          console.error("Error saving check-in:", error);
+          alert("Gagal menyimpan data. Coba lagi nanti.");
+        } finally {
+          setIsSaving(false);
+        }
       });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert(
-          result.message ||
-            "Check-in berhasil! Data kunjungan telah disimpan ke database."
-        );
-
-        // Reset form
-        setCurrentLocation(null);
-        setPhotos([]);
-        setSelectedStore("");
-        setVisitPurpose("");
-        setNotes("");
-      } else {
-        alert("Gagal menyimpan data: " + (result.error || "Unknown error"));
-      }
     } catch (error) {
-      console.error("Error saving check-in:", error);
-      alert("Gagal menyimpan data. Coba lagi nanti.");
-    } finally {
+      console.error("Error in handleCheckIn:", error);
       setIsSaving(false);
     }
   };
@@ -249,50 +260,114 @@ export default function SalesFieldPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Pilih Toko *
               </label>
-              <select
-                value={selectedStore}
-                onChange={(e) => setSelectedStore(e.target.value)}
-                className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
-              >
-                <option value="">Pilih toko yang dikunjungi</option>
-                {stores.map((store) => (
-                  <option key={store.id} value={store.id}>
-                    {store.name} - {store.address}
-                  </option>
-                ))}
-              </select>
 
-              {/* Store location info */}
-              {selectedStore &&
-                getSelectedStore()?.latitude &&
-                getSelectedStore()?.longitude && (
-                  <div className="mt-2 p-2 bg-blue-50 rounded-md">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-blue-700">
-                        <p className="font-medium">
-                          {getSelectedStore()?.name}
-                        </p>
-                        <p>
-                          Lat: {getSelectedStore()?.latitude?.toFixed(6)}, Lng:{" "}
-                          {getSelectedStore()?.longitude?.toFixed(6)}
-                        </p>
+              {/* Toggle between existing and new store */}
+              <div className="mb-4">
+                <div className="flex space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="storeType"
+                      checked={useExistingStore}
+                      onChange={() => setUseExistingStore(true)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Pilih dari daftar toko
+                    </span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="storeType"
+                      checked={!useExistingStore}
+                      onChange={() => setUseExistingStore(false)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Toko baru</span>
+                  </label>
+                </div>
+              </div>
+
+              {useExistingStore ? (
+                <>
+                  <select
+                    value={selectedStore}
+                    onChange={(e) => setSelectedStore(e.target.value)}
+                    className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
+                  >
+                    <option value="">Pilih toko yang dikunjungi</option>
+                    {stores.map((store) => (
+                      <option key={store.id} value={store.id}>
+                        {store.name} - {store.address}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Store location info */}
+                  {selectedStore &&
+                    getSelectedStore()?.latitude &&
+                    getSelectedStore()?.longitude && (
+                      <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-blue-700">
+                            <p className="font-medium">
+                              {getSelectedStore()?.name}
+                            </p>
+                            <p>
+                              Lat: {getSelectedStore()?.latitude?.toFixed(6)},
+                              Lng: {getSelectedStore()?.longitude?.toFixed(6)}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const store = getSelectedStore();
+                              if (store?.latitude && store?.longitude) {
+                                const url = `https://www.google.com/maps?q=${store.latitude},${store.longitude}`;
+                                window.open(url, "_blank");
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <MapPin className="h-5 w-5" />
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const store = getSelectedStore();
-                          if (store?.latitude && store?.longitude) {
-                            const url = `https://www.google.com/maps?q=${store.latitude},${store.longitude}`;
-                            window.open(url, "_blank");
-                          }
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <MapPin className="h-5 w-5" />
-                      </button>
-                    </div>
+                    )}
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Nama Toko *
+                    </label>
+                    <input
+                      type="text"
+                      value={storeName}
+                      onChange={(e) => setStoreName(e.target.value)}
+                      placeholder="Masukkan nama toko"
+                      className="block w-full px-3 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Alamat Toko
+                    </label>
+                    <input
+                      type="text"
+                      value={storeAddress}
+                      onChange={(e) => setStoreAddress(e.target.value)}
+                      placeholder="Masukkan alamat toko (opsional)"
+                      className="block w-full px-3 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md"
+                    />
+                  </div>
+                  <div className="text-sm text-gray-500 bg-yellow-50 p-2 rounded-md">
+                    💡 Toko baru akan disimpan ke database dengan lokasi GPS
+                    saat ini
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Visit Purpose */}
@@ -432,7 +507,7 @@ export default function SalesFieldPage() {
                 onClick={handleCheckIn}
                 disabled={
                   !currentLocation ||
-                  !selectedStore ||
+                  (useExistingStore ? !selectedStore : !storeName) ||
                   !visitPurpose ||
                   isSaving
                 }
@@ -441,7 +516,9 @@ export default function SalesFieldPage() {
                 <CheckCircle className="h-5 w-5 mr-2" />
                 {isSaving ? "Menyimpan..." : "Check-in Kunjungan"}
               </button>
-              {(!currentLocation || !selectedStore || !visitPurpose) &&
+              {(!currentLocation ||
+                (useExistingStore ? !selectedStore : !storeName) ||
+                !visitPurpose) &&
                 !isSaving && (
                   <p className="mt-2 text-sm text-gray-500 text-center">
                     * Lengkapi semua field yang wajib diisi
