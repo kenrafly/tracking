@@ -1,64 +1,182 @@
 # Order Management & Field Sales System
 
-Sistem manajemen order dan aktivitas sales lapangan yang komprehensif, dibangun dengan Next.js 15, TypeScript, dan Tailwind CSS.
+A comprehensive Next.js application for managing orders and field sales activities with admin confirmation workflows.
 
-## 🚀 Fitur Utama
+## 🚀 Features
 
-### Manajemen Order
+### Order Management
 
-- **List Detail Order Pelanggan**: Daftar lengkap orderan dengan informasi customer dan toko
-- **Status Pesanan**: Tracking status (baru, dalam proses, selesai, batal)
-- **Pelacakan Riwayat**: Riwayat pesanan per toko dengan filter dan pencarian
-- **Laporan Order**: Total order per toko dan secara keseluruhan
+- **Create Orders**: Sales reps can create orders without store visits
+- **Admin Confirmation**: Orders requiring approval workflow
+- **Order History**: Complete tracking with status updates
+- **Auto Store/Customer Creation**: Automatic entity creation when needed
 
-### Aktivitas Sales Lapangan
+### Field Sales Activities
 
-- **Bukti Kunjungan**: Upload foto dan lokasi GPS (geotagging) untuk setiap kunjungan
-- **Riwayat Kunjungan**: Tracking kunjungan setiap sales ke toko
-- **Check-in System**: Sistem check-in real-time dengan GPS tracking
+- **GPS Check-ins**: Location-based store visits with photo uploads
+- **Visit History**: Complete tracking of field activities
+- **Real-time Updates**: Live status updates and notifications
 
-### Dashboard & Analytics
+### Admin Dashboard
 
-- **Dashboard Visual**: Pencapaian target dengan grafik dan visualisasi
-- **Profile User**: Dashboard personal dengan target achievements
-- **Laporan Performa**: Analytics mendalam untuk setiap toko dan sales
+- **Order Approval**: Review and confirm pending orders
+- **Store Management**: Comprehensive store and customer data
+- **Analytics**: Performance tracking and reporting
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 15 with App Router
+- **Database**: PostgreSQL with Prisma ORM
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Charts**: Recharts
 - **Icons**: Lucide React
-- **UI Components**: Headless UI
-- **Progress Indicators**: React Circular Progressbar
+- **Charts**: Recharts
+- **State Management**: Server Actions (no API routes)
 
 ## 📱 Responsive Design
 
-Aplikasi ini fully responsive dan optimized untuk:
+Fully responsive application optimized for:
 
 - Desktop (1024px+)
 - Tablet (768px - 1023px)
 - Mobile (< 768px)
 
-## 🗂️ Struktur Project
+## � Deployment to Vercel
+
+### Quick Deploy
+
+1. **Connect Repository**: Link your GitHub repo to Vercel
+2. **Set Environment Variables**:
+   ```
+   DATABASE_URL=your_postgresql_connection_string
+   ```
+3. **Deploy**: Vercel will automatically build and deploy
+
+### Common Issues & Solutions
+
+#### 1. Prisma Client Issues
+
+Ensure these scripts exist in `package.json`:
+
+```json
+{
+  "scripts": {
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate"
+  }
+}
+```
+
+#### 2. Database Connection Timeout
+
+Update `vercel.json` for longer function timeouts:
+
+```json
+{
+  "functions": {
+    "app/**": {
+      "maxDuration": 10
+    }
+  }
+}
+```
+
+#### 3. Migration Issues
+
+Run migrations manually:
+
+```bash
+npx prisma migrate deploy
+```
+
+#### 4. Environment Variables
+
+Copy `.env.example` to `.env` and fill in values:
+
+```bash
+cp .env.example .env
+```
+
+### Build Script
+
+Use the included build script for local testing:
+
+```bash
+chmod +x build.sh
+./build.sh
+```
+
+## 🗂️ Project Structure
 
 ```
 src/
 ├── app/                    # Next.js App Router pages
-│   ├── page.tsx           # Dashboard utama
-│   ├── orders/            # Manajemen order
-│   ├── field-activity/    # Aktivitas sales lapangan
-│   ├── reports/           # Laporan dan analytics
-│   └── profile/           # Profile & target achievements
-├── components/            # Reusable components
-│   └── Navigation.tsx     # Komponen navigasi
-├── lib/                   # Utilities dan data
-│   ├── mockData.ts       # Sample data untuk demo
-│   └── utils.ts          # Helper functions
-└── types/                 # TypeScript type definitions
-    └── index.ts          # Interface dan types
+│   ├── page.tsx           # Dashboard
+│   ├── orders/            # Order creation
+│   ├── order-history/     # Order tracking
+│   ├── admin/             # Admin dashboard
+│   └── field-visits/      # GPS check-ins
+├── lib/
+│   ├── actions/           # Server actions
+│   ├── prisma.ts          # Database client
+│   └── utils.ts           # Utilities
+├── components/            # Reusable UI components
+└── types/                 # TypeScript definitions
 ```
+
+## 🔧 Development
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database
+- npm/yarn/pnpm
+
+### Setup
+
+1. Clone repository
+2. Install dependencies: `npm install`
+3. Setup database: `npx prisma migrate dev`
+4. Run development server: `npm run dev`
+
+### Key Server Actions
+
+- `/lib/actions/orders.ts` - Order management
+- `/lib/actions/field-visits.ts` - GPS tracking
+- `/lib/actions/stores.ts` - Store/sales rep data
+
+## 📊 Database Schema
+
+Built with Prisma ORM featuring:
+
+- **Orders**: Customer orders with admin approval
+- **FieldVisits**: GPS-tracked store visits
+- **Stores**: Store locations and information
+- **SalesReps**: Sales representative data
+- **Customers**: Customer management
+
+## 🔒 Security Features
+
+- Server-side validation
+- CORS protection via middleware
+- Input sanitization
+- Error boundaries for graceful failures
+
+## 📝 API Documentation
+
+This application uses **Server Actions** instead of API routes for better performance and type safety. All data operations are handled server-side with automatic revalidation.
+│ ├── field-activity/ # Aktivitas sales lapangan
+│ ├── reports/ # Laporan dan analytics
+│ └── profile/ # Profile & target achievements
+├── components/ # Reusable components
+│ └── Navigation.tsx # Komponen navigasi
+├── lib/ # Utilities dan data
+│ ├── mockData.ts # Sample data untuk demo
+│ └── utils.ts # Helper functions
+└── types/ # TypeScript type definitions
+└── index.ts # Interface dan types
+
+````
 
 ## 🚀 Getting Started
 
@@ -74,7 +192,7 @@ src/
 
 ```bash
 npm install
-```
+````
 
 3. Jalankan development server:
 
